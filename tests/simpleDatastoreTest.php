@@ -37,7 +37,6 @@ class simpleDatastoreTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($newdata->lobster_king['lobster_power'],50);
         $this->assertEquals($newdata['lobster_king']['powers'],'Claw attack');
         $this->assertTrue(strpos($newdata,'welcome') !== false);
-        print($newdata);
         $newdata->destroy();
 
     }
@@ -103,6 +102,45 @@ class simpleDatastoreTest extends PHPUnit_Framework_TestCase
         $this->assertEquals($teamA->value,$teamB->value);
         unset($teamB);
         $teamA->destroy();
+    }
+
+    public function testSerialize()
+    {
+        $smallDatastore = (object) array("code"=>12345);
+
+        $bigDatastore = new simpleDatastore("big",false,true);
+        $bigDatastore->small_guy = $smallDatastore;
+        $bigDatastore->save(true);
+        unset($smallDatastore);
+        unset($bigDatastore);
+
+        $otherDatastore = new simpleDatastore("big",false,true);
+        $this->assertEquals($otherDatastore->small_guy->code,12345);
+    }
+
+    /**
+     * @depends testSerialize
+     */
+    public function testDeepSerializing()
+    {
+        $smallDatastore = new simpleDatastore("small",false,true);
+        $smallDatastore->code = 12345;
+        $smallDatastore->passkey = json_decode('{"red_code":"alpha","blue_code":"zulu"}');
+        $smallDatastore->save();
+        $bigDatastore = new simpleDatastore("big",false,true);
+        $bigDatastore->small_guy = $smallDatastore;
+        $bigDatastore->save();
+        $bigDatastore->close();
+
+        $otherGuy = new simpleDatastore("big",false,true);
+        $this->assertEquals($otherGuy->small_guy->passkey->red_code,"alpha");
+        $otherGuy->small_guy->passkey->red_code = "beta";
+        $otherGuy->small_guy->save(true);
+        $otherGuy->destroy();
+
+        $anotherSmallGuy = new simpleDatastore("small",false,true);
+        $this->assertEquals($anotherSmallGuy->passkey->blue_code,"zulu");
+        $anotherSmallGuy->destroy();
     }
 
 

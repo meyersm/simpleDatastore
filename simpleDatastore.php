@@ -22,7 +22,7 @@ class simpleDatastore implements ArrayAccess{
     protected $datastoreDirectoryName = 'datastore';
 
     protected $activeLock;
-    protected $lockAttempts = 5;
+    protected $lockAttempts = 20;
     protected $lockFileHandler;
 
     protected $readOnly;
@@ -30,7 +30,7 @@ class simpleDatastore implements ArrayAccess{
     protected $datastoreObject;
 
 
-    public function __construct($datastore=null,$readOnly=false,$format='json',$datastoreDirectory=null)
+    public function __construct($datastore=null,$readOnly=false,$useSerialize=false,$datastoreDirectory=null)
     {
         $this->readOnly = $readOnly;
         if ($datastoreDirectory != null)
@@ -38,10 +38,11 @@ class simpleDatastore implements ArrayAccess{
         $this->datastoreDirectoryPath = realpath(dirname(__FILE__)) . '/'.$this->datastoreDirectoryName.'/';
         if (!$this->initDirectory())
             $this->throwError("Could not create or access datastore directory");
-        if (in_array($format,$this->availible_formats))
-            $this->format = $format;
+        if ($useSerialize)
+            $this->format = $this->availible_formats[1];
         else
             $this->format = $this->availible_formats[0];
+
         if ($datastore != null)
             $this->openDatastore($datastore);
         return $this;
@@ -89,11 +90,9 @@ class simpleDatastore implements ArrayAccess{
         if ($this->currentDatastore == null)
             return;
         if (is_file($this->getDataFile()))
-        {
             unlink($this->getDataFile());
-            if (is_file($this->getLockFile()))
-                unlink($this->getLockFile());
-        }
+        if (is_file($this->getLockFile()))
+            unlink($this->getLockFile());
     }
 
     //Array Access Interface
@@ -142,6 +141,21 @@ class simpleDatastore implements ArrayAccess{
     public function __toString()
     {
         return print_r($this->datastoreObject,true);
+    }
+
+    public function __sleep()
+    {
+        if ($this->activeLock)
+            $this->unlockFile();
+        return array('timeBetweenLockAttempts','debug_mode','error_mode','format',
+            'datastoreDirectoryPath','datastoreDirectoryName','activeLock','lockAttempts',
+            'lockFileHandler','readOnly','currentDatastore','datastoreObject');
+  }
+
+    public function __wakeup()
+    {
+        if ($this->currentDatastore != null)
+            $this->open($this->currentDatastore);
     }
 
     /**************************** Internal functions *********************/
@@ -239,7 +253,8 @@ class simpleDatastore implements ArrayAccess{
     {
         if (!$this->activeLock)
             return true;
-
+        if (!is_resource($this->lockFileHandler))
+            return true;//The file handler was destroyed or dereferenced
         if(!flock($this->lockFileHandler, LOCK_UN))
             $this->throwError("File unlock failed");
         else
