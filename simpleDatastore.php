@@ -6,7 +6,7 @@
 
 class simpleDatastore implements ArrayAccess{
 
-    public $timeBetweenLockAttempts = 1;
+
     public $debug_mode = false;
     public $error_mode = 0;
     //Throw Exceptions on fatal error
@@ -22,6 +22,7 @@ class simpleDatastore implements ArrayAccess{
     protected $datastoreDirectoryName = 'datastore';
 
     protected $activeLock;
+    protected $timeBetweenLockAttempts = 1;
     protected $lockAttempts = 20;
     protected $lockFileHandler;
 
@@ -29,7 +30,12 @@ class simpleDatastore implements ArrayAccess{
     protected $currentDatastore;
     protected $datastoreObject;
 
-
+    /**
+     * @param null $datastore Datastore name, null to delay file open until later
+     * @param bool $readOnly TRUE to open in read only mode, works on locked files
+     * @param bool $useSerialize Use php serialization instead of converting to JSON objects
+     * @param null $datastoreDirectory Directory to access/store datastores, leave as null for default
+     */
     public function __construct($datastore=null,$readOnly=false,$useSerialize=false,$datastoreDirectory=null)
     {
         $this->readOnly = $readOnly;
@@ -55,6 +61,28 @@ class simpleDatastore implements ArrayAccess{
 
     }
 
+    /**
+     * @param int $secondsBetweenLockAttempts Seconds to wait between lock attempts
+     * @param int $lockAttempts Number of tries to try and lock datastore
+     */
+    public function setLockConfig($secondsBetweenLockAttempts=1,$lockAttempts=20)
+    {
+        $this->timeBetweenLockAttempts = $secondsBetweenLockAttempts;
+        $this->lockAttempts = $lockAttempts;
+    }
+
+    /**
+     * @return array
+     */
+    public function getLockConfig()
+    {
+        return array('secondsBetweenLockAttempts'=>$this->timeBetweenLockAttempts,'lockAttempts'=>$this->lockAttempts);
+    }
+
+    /**
+     * @param String $datastore Datastore name
+     * @return bool TRUE if open was successful
+     */
     public function open($datastore)
     {
         if ($this->activeLock)
@@ -62,6 +90,10 @@ class simpleDatastore implements ArrayAccess{
         return $this->openDatastore($datastore);
     }
 
+    /**
+     * @param bool $releaseLock Set to true to release file lock after save (same as calling save then close)
+     * @return bool|int number of characters written or FALSE for failure
+     */
     public function save($releaseLock=false)
     {
         $ret = false;
@@ -74,6 +106,9 @@ class simpleDatastore implements ArrayAccess{
         return $ret;
     }
 
+    /**
+     * close current datastore and release file lock
+     */
     public function close()
     {
         if ($this->activeLock)
@@ -82,6 +117,9 @@ class simpleDatastore implements ArrayAccess{
         $this->datastoreObject = array();
     }
 
+    /**
+     * Delete datastore, this will remove the file and is not recoverable
+     */
     public function destroy()
     {
         if ($this->activeLock)
@@ -150,7 +188,7 @@ class simpleDatastore implements ArrayAccess{
         return array('timeBetweenLockAttempts','debug_mode','error_mode','format',
             'datastoreDirectoryPath','datastoreDirectoryName','activeLock','lockAttempts',
             'lockFileHandler','readOnly','currentDatastore','datastoreObject');
-  }
+    }
 
     public function __wakeup()
     {
@@ -162,16 +200,26 @@ class simpleDatastore implements ArrayAccess{
 
 
     //Data Store Access functions
+    /**
+     * @return string
+     */
     protected function getDataFile()
     {
         return $this->datastoreDirectoryPath . $this->currentDatastore . '.' . $this->format;
     }
 
+    /**
+     * @return string
+     */
     protected function getLockFile()
     {
         return $this->datastoreDirectoryPath . $this->currentDatastore . '.lock';
     }
 
+    /**
+     * @param string $datastore Datastore name
+     * @return bool TRUE if datastore was opened
+     */
     protected function openDatastore($datastore)
     {
         $this->currentDatastore = $datastore;
@@ -202,6 +250,9 @@ class simpleDatastore implements ArrayAccess{
         return true;
     }
 
+    /**
+     * @return bool|int file_put_contents response, chars written or failure
+     */
     protected function closeDatastore()
     {
         if (!$this->activeLock)
@@ -221,6 +272,9 @@ class simpleDatastore implements ArrayAccess{
     }
 
     //Lock File functions
+    /**
+     * @return bool
+     */
     protected function lockFile()
     {
         $lockfile = $this->getLockFile();
@@ -249,6 +303,9 @@ class simpleDatastore implements ArrayAccess{
         return $this->activeLock;
     }
 
+    /**
+     * @return bool
+     */
     protected function unlockFile()
     {
         if (!$this->activeLock)
@@ -264,6 +321,9 @@ class simpleDatastore implements ArrayAccess{
     }
 
     //Folder Init
+    /**
+     * @return bool
+     */
     protected function initDirectory()
     {
         if (!file_exists($this->datastoreDirectoryPath))
@@ -272,6 +332,9 @@ class simpleDatastore implements ArrayAccess{
     }
 
     //Logging
+    /**
+     * @param SplString $string
+     */
     protected function log($string)
     {
         if ($this->debug_mode)
@@ -279,6 +342,10 @@ class simpleDatastore implements ArrayAccess{
     }
 
     //Errors
+    /**
+     * @param $string
+     * @throws ErrorException
+     */
     protected function throwError($string)
     {
         $this->log("Error thrown: $string");

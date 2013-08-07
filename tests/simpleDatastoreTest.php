@@ -143,5 +143,23 @@ class simpleDatastoreTest extends PHPUnit_Framework_TestCase
         $anotherSmallGuy->destroy();
     }
 
+    public function testLockConfiguration()
+    {
+        $firstGuy = new simpleDatastore("race");
+        $firstGuy['something'] = "someOtherThing";
+        $firstGuy->save();
+        $secondGuy = new simpleDatastore();
+        $secondGuy->setLockConfig(1,5);
+        $arr = $secondGuy->getLockConfig();
+        $this->assertEquals($arr['secondsBetweenLockAttempts'],1);
+        $this->assertEquals($arr['lockAttempts'],5);
+        $secondGuy->error_mode = simpleDatastore::$ERROR_MODE_SILENT;
+        $oldTime = time();
+        $secondGuy->open("race");
+        $newTime = time();
+        $time = $newTime - $oldTime;
+        $this->assertGreaterThan(4,$time);//Should take more then 4 seconds for 5 attempts with 1 second sleep.
+    }
+
 
 }
