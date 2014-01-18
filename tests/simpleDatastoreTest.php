@@ -159,6 +159,7 @@ class simpleDatastoreTest extends PHPUnit_Framework_TestCase
         $newTime = time();
         $time = $newTime - $oldTime;
         $this->assertGreaterThan(4,$time);//Should take more then 4 seconds for 5 attempts with 1 second sleep.
+        $firstGuy->destroy();
     }
 
 
