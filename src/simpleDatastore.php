@@ -3,8 +3,9 @@
  * Michael Meyers
  * A Simple class to store data on the local filesystem without any additional php libraries
  */
+namespace meyersm;
 
-class simpleDatastore implements ArrayAccess{
+class simpleDatastore implements \ArrayAccess{
 
 
     public $debug_mode = false;
@@ -20,7 +21,7 @@ class simpleDatastore implements ArrayAccess{
     protected $availible_formats = array('json','serial');
     protected $datastoreDirectoryPath = null;
     protected $datastoreDirectoryName = 'datastore';
-
+    //TODO: allow full path to be provided for datastore folder
     protected $activeLock;
     protected $timeBetweenLockAttempts = 1;
     protected $lockAttempts = 20;

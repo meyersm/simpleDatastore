@@ -1,5 +1,7 @@
 <?php
-require (dirname(__FILE__) . '/../simpleDatastore.php');
+require(dirname(__FILE__) . '/../src/simpleDatastore.php');
+
+use meyersm\simpleDatastore;
 
 class simpleDatastoreTest extends PHPUnit_Framework_TestCase
 {
