@@ -1,5 +1,5 @@
 {
-    "name": "meyersm/simpleDatastore",
+    "name": "meyersm/simple-datastore",
     "require": {
         "php": ">=5.3.0"
     }
