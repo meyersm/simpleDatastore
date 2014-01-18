@@ -1,5 +1,5 @@
 <?php
-require ('../simpleDatastore.php');
+require (dirname(__FILE__) . '/../simpleDatastore.php');
 
 class simpleDatastoreTest extends PHPUnit_Framework_TestCase
 {
