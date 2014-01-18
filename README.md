@@ -1,5 +1,6 @@
 simpleDatastore
 ===============
+[![Build Status](https://travis-ci.org/meyersm/simpleDatastore.png?branch=master)](https://travis-ci.org/meyersm/simpleDatastore)
 
 A PHP library to store objects between sessions using only the local file system.
 
@@ -36,6 +37,10 @@ $NEWdatastore = new simpleDatastore("datastore-name");
 print $NEWdatastore->fish_hooks; //50
 print $NEWdatastore['fish_names'][0] //bob
 ```
+If you want to delete a datastore file, use the destroy function
+```php
+$datastore->destroy();
+```
 
 When you try to open a datastore that already has a lock on it, the library will re-try for a configurable amount of time then error out.
 If you want to access a datastore while its locked, you can open it in read only mode
@@ -61,11 +66,11 @@ $teamB->open("teststore");
 ```
 To change the way the library handles a locked datastore file, use the setLockConfig function. Again if doing this, delay opening the datastore file like in the example above
 ```php
-    /**
-     * @param int $secondsBetweenLockAttempts Seconds to wait between lock attempts
-     * @param int $lockAttempts Number of tries to try and lock datastore
-     */
-    public function setLockConfig($secondsBetweenLockAttempts=1,$lockAttempts=20)
+/**
+* @param int $secondsBetweenLockAttempts Seconds to wait between lock attempts
+* @param int $lockAttempts Number of tries to try and lock datastore
+*/
+public function setLockConfig($secondsBetweenLockAttempts=1,$lockAttempts=20)
 ```
 
 For more examples on how to use this library, check out the unit tests 
