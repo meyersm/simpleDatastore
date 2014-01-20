@@ -1,11 +1,13 @@
 {
     "name": "meyersm/simple-datastore",
+    "type": "library",
+    "description": "A PHP library to store objects between sessions using only the local file system",
+    "keywords": ["datastore","database"],
+    "homepage": "https://github.com/meyersm/simpleDatastore",
     "require": {
         "php": ">=5.3.0"
     },
     "autoload": {
-        "psr-0": {
-            "meyersm": "src/"
-        }
+        "files": ["src/simpleDatastore.php"]
     }
 }
