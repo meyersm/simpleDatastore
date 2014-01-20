@@ -13,6 +13,25 @@ Good uses for simpleDatastore
 
 This library should NOT be used as a replacement for a database in any application that has high traffic and many concurrent writes, while the files are locked while writing, every other thread/script that wants to write will have to wait for the lock causing slowdowns. 
 
+Installation
+------------
+To install with composer, add this to your composer.json
+```
+	"require": {
+        "meyersm/simple-datastore":">=0.5.2"
+	},
+```
+Then run `composer update` and add this to your code,
+```php
+use meyersm\simpleDatastore;
+```
+
+Alternativly you can just download the simpleDatastore.php file and add this to your code,
+```php
+require('simpleDatastore.php');
+use meyersm\simpleDatastore;
+```
+
 Usage
 -------
 
